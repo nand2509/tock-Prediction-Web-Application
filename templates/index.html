@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Prediction</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #000000; /* Black background */
+            color: #f4f4f4; /* Light text color */
+            text-align: center;
+            padding: 20px;
+        }
+        h1 {
+            color: #FFD700; /* Yellow color */
+            margin-bottom: 20px;
+        }
+        form {
+            margin-bottom: 20px;
+        }
+        input[type="text"] {
+            padding: 10px;
+            border: 1px solid #FFD700; /* Yellow border */
+            border-radius: 5px;
+            width: 80%;
+            max-width: 400px;
+            box-sizing: border-box;
+            background-color: #333; /* Dark background for input */
+            color: #FFD700; /* Yellow text color */
+        }
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #FFD700; /* Yellow background */
+            color: #000; /* Black text color */
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #FFC107; /* Lighter yellow for hover */
+        }
+        #results, #prediction {
+            margin-top: 20px;
+            text-align: left;
+            display: inline-block;
+            width: 80%;
+            max-width: 600px;
+            padding: 20px;
+            background-color: #1a1a1a; /* Dark background for results */
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(255, 215, 0, 0.5); /* Yellow shadow */
+        }
+        .stock, .prediction {
+            margin-bottom: 15px;
+            padding: 15px;
+            border: 1px solid #FFD700; /* Yellow border */
+            border-radius: 8px;
+            background-color: #333; /* Dark background for stock and prediction */
+        }
+        .stock strong, .prediction strong {
+            display: block;
+            font-size: 18px;
+            color: #FFD700; /* Yellow color for stock and prediction titles */
+        }
+        .stock p, .prediction p {
+            margin: 5px 0;
+            color: #f4f4f4; /* Light text color */
+        }
+        @media (max-width: 768px) {
+            input[type="text"] {
+                width: 100%;
+            }
+            #results, #prediction {
+                width: 100%;
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Stock Prediction</h1>
+    <form id="search-form">
+        <input type="text" id="query" placeholder="Enter stock symbol" required>
+        <button type="submit">Search</button>
+    </form>
+    <div id="results"></div>
+
+    <form id="predict-form">
+        <input type="text" id="symbol" placeholder="Enter stock symbol for prediction" required>
+        <button type="submit">Get Prediction</button>
+    </form>
+    <div id="prediction"></div>
+
+    <script>
+        document.getElementById('search-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const query = document.getElementById('query').value;
+            fetch('/search', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: 'query=' + encodeURIComponent(query)
+            })
+            .then(response => response.json())
+            .then(data => {
+                const resultsDiv = document.getElementById('results');
+                resultsDiv.innerHTML = '';
+                if (data.length === 0) {
+                    resultsDiv.innerHTML = '<p>No results found.</p>';
+                } else {
+                    data.forEach(stock => {
+                        const stockDiv = document.createElement('div');
+                        stockDiv.classList.add('stock');
+                        stockDiv.innerHTML = `<strong>${stock.symbol}</strong>
+                                               <p>${stock.name}</p>`;
+                        resultsDiv.appendChild(stockDiv);
+                    });
+                }
+            });
+        });
+
+        document.getElementById('predict-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const symbol = document.getElementById('symbol').value;
+            fetch('/predict', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: 'symbol=' + encodeURIComponent(symbol)
+            })
+            .then(response => response.json())
+            .then(data => {
+                const predictionDiv = document.getElementById('prediction');
+                predictionDiv.innerHTML = '';
+                if (data.error) {
+                    predictionDiv.innerHTML = '<p>' + data.error + '</p>';
+                } else {
+                    const predictionHTML = `<div class="prediction">
+                        <strong>${data.symbol}</strong>
+                        <p><strong>Company Name:</strong> ${data.companyName}</p>
+                        <p><strong>Current Price:</strong> $${data.price.toFixed(2)}</p>
+                        <p><strong>Prediction:</strong> ${data.prediction}</p>
+                    </div>`;
+                    predictionDiv.innerHTML = predictionHTML;
+                }
+            });
+        });
+    </script>
+</body>
+</html>
